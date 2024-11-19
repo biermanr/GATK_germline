@@ -1,33 +1,32 @@
 nextflow.enable.dsl=2
 
 process HaplotypeCaller {
+    cpus 1
+    memory '10 GB'
+    time '4h'
+
     input:
         tuple val(meta), path(cram), path(crai)
 
     output:
-        tuple val(meta), path("GVCF")
+        tuple val(meta), path("output.g.vcf.gz")
 
     script:
         """
-        gatk --java-options -XX:-UsePerfData \
-            HaplotypeCaller \
-            --verbosity INFO \
-            --reference ??? \
+        gatk --java-options "-Xmx4g" HaplotypeCaller \
             --input $cram \
-            --output GVCF
+            --verbosity INFO \
+            --reference $params.reference_fasta \
+            --intervals chr22 \
+            --emit-ref-confidence GVCF \
+            -GQB 10 -GQB 20 -GQB 30 -GQB 40 -GQB 50 -GQB 60 -GQB 70 -GQB 80 -GQB 90 \
+            -G StandardAnnotation -G StandardHCAnnotation \
+            --output output.g.vcf.gz
         """
 
     stub:
         """
-        du -Lhs $cram > GVCF
-        du -Lhs $crai >> GVCF
-
-        # gatk is accessible through the singularity image
-        which gatk >> GVCF
-
-        # this dumps the HaplotypeCaller help message to file
-        gatk --java-options -XX:-UsePerfData \
-            HaplotypeCaller --help 2>> GVCF
+        touch output.g.vcf.gz
         """
 }
 
@@ -68,6 +67,8 @@ process GenotypeGVCFs {
 
 //START
 workflow {
+    params.reference_fasta = file("/projects/AKEY/akey_vol2/GTExSomaticMutations/Broad160XWGS.nobackup/Homo_sapiens_assembly38.fasta")
+
     //Read in sample info and CRAMs
     //into a tuple of [metadata, cram, crai]
     samples = Channel
@@ -87,6 +88,6 @@ workflow {
         ))
 
 
-    gvcfs = samples.take(10) | HaplotypeCaller //NOTE TAKE!
+    gvcfs = samples.take(2) | HaplotypeCaller //NOTE TAKE!
 }
 
