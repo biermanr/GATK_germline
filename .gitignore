@@ -1,2 +1,6 @@
 .nextflow*
 .*.swp
+*.gz
+*.vcf
+*.bam
+*.bed
