@@ -118,7 +118,7 @@ workflow {
             ],
             file(row["cram_path"]), 
             file(row["crai_path"])
-        )).take(40) //NOTE TAKE!!!!
+        ))
 
     //Define multiple regions to run in parallel
     regions = Channel.of(
